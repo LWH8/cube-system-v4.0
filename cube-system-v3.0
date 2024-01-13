@@ -1,0 +1,788 @@
+from machine import Pin
+from machine import I2C
+from lcd_api import LcdApi
+from pico_i2c_lcd import I2cLcd
+import random
+from random import randint
+import os
+import sys
+from time import sleep
+import utime
+
+# Setup LCD Display
+
+I2C_ADDR     = 0x27    # Decimal 39
+
+I2C_NUM_ROWS = 2
+
+I2C_NUM_COLS = 16
+
+
+SDA_PIN = 0
+
+SCL_PIN = 1
+
+i2c = I2C(0, sda=machine.Pin(SDA_PIN), scl=machine.Pin(SCL_PIN), freq=400000)
+
+lcd = I2cLcd(i2c, I2C_ADDR, I2C_NUM_ROWS, I2C_NUM_COLS)
+lcd.hal_backlight_on()
+
+moves = ("R U L F B D")
+omoves = ("R' U' F' B' D'")
+dmoves = ("R# U# L# F# B# D#")
+dscramblemoves = dmoves.split()
+scramblemoves = moves.split()
+oscramblemoves = omoves.split()
+randommove = random.choice(scramblemoves)
+orandommove = random.choice(oscramblemoves)
+drandommove = random.choice(dscramblemoves)
+buttony = machine.Pin(28, machine.Pin.IN, machine.Pin.PULL_UP)
+buttonb = machine.Pin(16, machine.Pin.IN, machine.Pin.PULL_UP)
+buttong = machine.Pin(18, machine.Pin.IN, machine.Pin.PULL_UP)
+buttonr = machine.Pin(27, machine.Pin.IN, machine.Pin.PULL_UP)
+buttonf1 = machine.Pin(20, machine.Pin.IN, machine.Pin.PULL_UP)
+buttonf2 = machine.Pin(26, machine.Pin.IN, machine.Pin.PULL_UP)
+buttonf3 = machine.Pin(3, machine.Pin.IN, machine.Pin.PULL_UP)
+buttonf4 = machine.Pin(22, machine.Pin.IN, machine.Pin.PULL_UP)
+
+file = open("/Times/ao5/time1.csv", "w")
+file.flush()
+file = open("/Times/ao5/time2.csv", "w")
+file.flush()
+file = open("/Times/ao5/time3.csv", "w")
+file.flush()
+file = open("/Times/ao5/time4.csv", "w")
+file.flush()
+file = open("/Times/ao5/time5.csv", "w")
+file.flush()
+
+file = open("/Times/ao12/time1.csv", "w")
+file.flush()
+file = open("/Times/ao12/time2.csv", "w")
+file.flush()
+file = open("/Times/ao12/time3.csv", "w")
+file.flush()
+file = open("/Times/ao12/time4.csv", "w")
+file.flush()
+file = open("/Times/ao12/time5.csv", "w")
+file.flush()
+file = open("/Times/ao12/time6.csv", "w")
+file.flush()
+file = open("/Times/ao12/time7.csv", "w")
+file.flush()
+file = open("/Times/ao12/time8.csv", "w")
+file.flush()
+file = open("/Times/ao12/time9.csv", "w")
+file.flush()
+file = open("/Times/ao12/time10.csv", "w")
+file.flush()
+file = open("/Times/ao12/time11.csv", "w")
+file.flush()
+file = open("/Times/ao12/time12.csv", "w")
+file.flush()
+
+os.remove("/Times/ao5/time1.csv")
+os.remove("/Times/ao5/time2.csv")
+os.remove("/Times/ao5/time3.csv")
+os.remove("/Times/ao5/time4.csv")
+os.remove("/Times/ao5/time5.csv")
+
+os.remove("/Times/ao12/time1.csv")
+os.remove("/Times/ao12/time2.csv")
+os.remove("/Times/ao12/time3.csv")
+os.remove("/Times/ao12/time4.csv")
+os.remove("/Times/ao12/time5.csv")
+os.remove("/Times/ao12/time6.csv")
+os.remove("/Times/ao12/time7.csv")
+os.remove("/Times/ao12/time8.csv")
+os.remove("/Times/ao12/time9.csv")
+os.remove("/Times/ao12/time10.csv")
+os.remove("/Times/ao12/time11.csv")
+os.remove("/Times/ao12/time12.csv")
+
+solves = 1
+
+#Keypad
+# CONSTANTS
+KEY_UP   = const(0)
+KEY_DOWN = const(1)
+
+keys = [['1', '2', '3', 'A'], ['4', '5', '6', 'B'], ['7', '8', '9', 'C'], ['*', '0', '#', 'D']]
+
+# Pin names for Keypad Matrix
+rows = [15,14,13,12]
+cols = [11,10,9,8]
+
+# set pins for rows as outputs
+row_pins = [Pin(pin_name, mode=Pin.OUT) for pin_name in rows]
+
+# set pins for cols as inputs
+col_pins = [Pin(pin_name, mode=Pin.IN, pull=Pin.PULL_DOWN) for pin_name in cols]
+
+def init():
+    for row in range(0,4):
+        for col in range(0,4):
+            row_pins[row].low()
+
+def scan(row, col):
+    """ scan the keypad """
+
+    # set the current column to high
+    row_pins[row].high()
+    key = None
+
+    # check for keypressed events
+    if col_pins[col].value() == KEY_DOWN:
+        key = KEY_DOWN
+    if col_pins[col].value() == KEY_UP:
+        key = KEY_UP
+    row_pins[row].low()
+
+    # return the key state
+    return key
+
+# set all the columns to low
+init()
+
+lcd.clear()
+lcd.putstr("Power On")
+utime.sleep(2)
+lcd.clear()
+lcd.putstr("Cube System")
+file = open("/Scrambles/scramble.csv", "w")
+
+#Begin Main Program
+lcd.backlight_on()
+while True:
+    if buttony.value() == 0:
+        lcd.clear()
+        lcd.putstr("2 By 2 Rubik's  Cube")
+        cubeselected = True
+        while cubeselected == True:
+            if buttonr.value() == 0:
+                lcd.clear()
+                lcd.putstr("Cube System")
+                utime.sleep(0.5)
+                cubeselected = False
+                session = False
+            if buttony.value() == 0:
+                file = open("/Times/personalbest2x2.csv", "r")
+                pb = file.read()
+                lcd.clear()
+                lcd.putstr("2 by 2 PB: ")
+                lcd.putstr(pb)
+                file.flush()
+                pbviewer = True
+                while pbviewer == True:
+                    if buttonf2.value() == 0:
+                        lcd.clear()
+                        file = open("Scrambles/personalbests/2x2.csv", "r")
+                        pbscramble = file.read()
+                        lcd.putstr(pbscramble)
+                        file.flush()
+                        utime.sleep(1)
+                        while pbviewer == True:
+                            if buttonf2.value() == 0:
+                                lcd.clear()
+                                lcd.move_to(0, 0)
+                                file = open("Times/ao5/ao5pb2x2.csv" , "r")
+                                pb = file.read()
+                                lcd.putstr("ao5 PB: ")
+                                lcd.putstr(pb)
+                                file.flush()
+                                lcd.move_to(0, 1)
+                                file = open("Times/ao12/ao12pb2x2.csv", "r")
+                                pb12 = file.read()
+                                lcd.putstr("ao12 PB: ")
+                                lcd.putstr(pb12)
+                                file.flush()
+                            if buttonr.value() == 0:
+                                lcd.clear()
+                                lcd.putstr("Cube System")
+                                pbviewer = False
+                                cubeselected = False
+                        
+            if buttong.value() == 0:
+                lcd.clear()
+                lcd.putstr("Welcome to      Sessions!")
+                utime.sleep(1)
+                sessionmode = 1
+                while sessionmode == 1:
+                    if buttonr.value() == 0:
+                        sessionmode = 0
+                        lcd.clear()
+                        lcd.putstr("Cube System")
+                    if buttony.value() == 0:
+                        lcd.clear()
+                        lcd.putstr("ao5 mode")
+                        ao5mode = True
+                        while ao5mode == True:
+                            if buttong.value() == 0:
+                                for i in range(0, 5):
+                                    waiting = 1
+                                    lcd.clear()
+                                    lcd.putstr("Generating      scramble...")
+                                    utime.sleep(1)
+                                    # begin scramble generator.
+                                    os.remove("/Scrambles/scramble.csv")
+                                    file = open("/Scrambles/scramble.csv", "w")
+                                    for i in range (0, 12):
+                                        option = randint(1, 3)
+                                        randommoveold = randommove
+                                        orandommoveold = orandommove
+                                        drandommoveold = drandommove
+                                        randommove = random.choice(scramblemoves)
+                                        orandommove = random.choice(oscramblemoves)
+                                        drandommove = random.choice(dscramblemoves)
+                                        if option == 1:
+                                            while randommove == "R" or drandommove == "RT" and orandommoveold == "R'":
+                                                randommove = random.choice(scramblemoves)
+                                            while randommove == "U" or drandommove == "UT" and orandommoveold == "U'":
+                                                randommove = random.choice(scramblemoves)
+                                            while randommove == "L" or drandommove == "LT" and orandommoveold == "L'":
+                                                randommove = random.choice(scramblemoves)
+                                            while randommove == "B" or drandommove == "BT" and orandommoveold == "B'":
+                                                randommove = random.choice(scramblemoves)
+                                            while randommove == "D" or drandommove == "DT" and orandommoveold == "D'":
+                                                randommove = random.choice(scramblemoves)
+                                            while randommove == "F" or drandommove == "FT" and orandommoveold == "F'":
+                                                randommove = random.choice(scramblemoves)
+                                            while randommove == randommoveold:
+                                                randommove = random.choice(scramblemoves)
+                                            file.write(randommove)
+                                        elif option == 2:
+                                            while orandommove == "R'" and randommoveold == "R" or drandommoveold == "RT":
+                                                orandommove = random.choice(oscramblemoves)
+                                            while orandommove == "U'" and randommoveold == "U" or drandommoveold == "UT":
+                                                orandommove = random.choice(oscramblemoves)
+                                            while orandommove == "L'" and randommoveold == "L" or drandommoveold == "LT":
+                                                orandommove = random.choice(oscramblemoves)
+                                            while orandommove == "B'" and randommoveold == "B" or drandommoveold == "BT":
+                                                orandommove = random.choice(oscramblemoves)
+                                            while orandommove == "D'" and randommoveold == "D" or drandommoveold == "DT":
+                                                orandommove = random.choice(oscramblemoves)
+                                            while orandommove == "F'" and randommoveold == "F" or drandommoveold == "FT":
+                                                orandommove = random.choice(oscramblemoves)
+                                            while orandommove == orandommoveold:
+                                                orandommove = random.choice(oscramblemoves)
+                                            file.write(orandommove)
+                                        elif option == 3:
+                                            file.write(drandommove)
+                                            
+                                    file.close()
+                                    lcd.clear()
+                                    file = open("/Scrambles/scramble.csv")
+                                    scramble = file.read()
+                                    lcd.putstr(scramble)
+                                    utime.sleep(1)
+                                    while waiting == 1:
+                                        if buttonr.value() == 0:
+                                            sessionmode = 0
+                                            waiting = 0
+                                            ao5mode = False
+                                        if buttong.value() == 0:
+                                            lcd.clear()
+                                            lcd.putstr("Enter your time:")
+                                            timeinput = True
+                                            file = open("/Times/creating.csv", "w")
+                                            os.remove("/Times/creating.csv")
+                                            file = open("/Times/creating.csv", "w")
+                                            while timeinput == True:
+                                                for row in range(4):
+                                                    for col in range(4):
+                                                        key = scan(row, col)
+                                                        if key == KEY_DOWN:
+                                                            print("Key Pressed", keys[row][col])
+                                                            last_key_press = keys[row][col]
+                                                            if keys[row][col] == "1":
+                                                                file.write("1")
+                                                                lcd.putstr("1")
+                                                                sleep(0.5)
+                                                            elif keys[row][col] == "2":
+                                                                file.write("2")
+                                                                lcd.putstr("2")
+                                                                sleep(0.5)
+                                                            elif keys[row][col] == "3":
+                                                                file.write("3")
+                                                                lcd.putstr("3")
+                                                                sleep(0.5)
+                                                            elif keys[row][col] == "4":
+                                                                file.write("4")
+                                                                lcd.putstr("4")
+                                                                sleep(0.5)
+                                                            elif keys[row][col] == "5":
+                                                                file.write("5")
+                                                                lcd.putstr("5")
+                                                                sleep(0.5)
+                                                            elif keys[row][col] == "6":
+                                                                file.write("6")
+                                                                lcd.putstr("6")
+                                                                sleep(0.5)
+                                                            elif keys[row][col] == "7":
+                                                                file.write("7")
+                                                                lcd.putstr("7")
+                                                                sleep(0.5)
+                                                            elif keys[row][col] == "8":
+                                                                file.write("8")
+                                                                lcd.putstr("8")
+                                                                sleep(0.5)
+                                                            elif keys[row][col] == "9":
+                                                                file.write("9")
+                                                                lcd.putstr("9")
+                                                                sleep(0.5)
+                                                            elif keys[row][col] == "0":
+                                                                file.write("0")
+                                                                lcd.putstr("0")
+                                                                sleep(0.5)
+                                                            elif keys[row][col] == "#":
+                                                                file.write(":")
+                                                                lcd.putstr(":")
+                                                                sleep(0.5)
+                                                            elif keys[row][col] == "B":
+                                                                file.write(".")
+                                                                lcd.putstr(".")
+                                                                sleep(0.5)
+                                                            elif keys[row][col] == "D":
+                                                                file.write("0:")
+                                                                lcd.putstr("0:")
+                                                                sleep(0.5)
+                                                            elif keys[row][col] == "A":
+                                                                lcd.clear()
+                                                                os.remove("/Times/creating.csv")
+                                                                file = open("/Times/creating.csv", "w")
+                                                                lcd.putstr("Enter Your Time: ")
+                                                                sleep(0.5)
+                                                            elif keys[row][col] == "*":
+                                                                print("yes")
+                                                                file.flush()
+                                                                file = open("/Times/creating.csv", "r")
+                                                                solvetime = file.read()
+                                                                print(solvetime)
+                                                                lcd.clear()
+                                                                sleep(0.2)
+                                                                file.flush()
+                                                                os.remove("/Times/times.csv")
+                                                                file = open("/Times/times.csv", "w")
+                                                                file.write(str(solvetime))
+                                                                file.flush()
+                                                                sleep(0.5)
+                                                                print("done")
+                                                                file = open("/Times/personalbest2x2.csv", "r")
+                                                                pb = file.read()
+                                                                convertedpb = pb.replace(":", "")
+                                                                convertedsolvetime = solvetime.replace(":", "")
+                                                                if float(convertedpb) > float(convertedsolvetime):
+                                                                    file.flush()
+                                                                    os.remove("/Times/personalbest2x2.csv")
+                                                                    file = open("/Times/personalbest2x2.csv", "w")
+                                                                    file.write(solvetime)
+                                                                    file.flush()
+                                                                    os.remove("/Scrambles/personalbests/2x2.csv")
+                                                                    file = open("/Scrambles/personalbests/2x2.csv", "w")
+                                                                    file.write(scramble)
+                                                                    file.flush()
+                                                                if solves == 1:
+                                                                    file = open("Times/times.csv")
+                                                                    time1 = file.read()
+                                                                    file.flush()
+                                                                    modtime1, modtime1x = time1.split(":")
+                                                                    modtime1 = float(modtime1) * 60
+                                                                    fulltime1 = float(modtime1) + float(modtime1x)
+                                                                    print(fulltime1)
+                                                                elif solves == 2:
+                                                                    file = open("Times/times.csv")
+                                                                    time2 = file.read()
+                                                                    file.flush()
+                                                                    modtime2, modtime2x = time2.split(":")
+                                                                    modtime2 = float(modtime2) * 60
+                                                                    fulltime2 = float(modtime2) + float(modtime2x)
+                                                                    print(fulltime2)
+                                                                elif solves == 3:
+                                                                    file = open("Times/times.csv")
+                                                                    time3 = file.read()
+                                                                    file.flush()
+                                                                    modtime3, modtime3x = time3.split(":")
+                                                                    modtime3 = float(modtime3) * 60
+                                                                    fulltime3 = float(modtime3) + float(modtime3x)
+                                                                    print(fulltime3)
+                                                                elif solves == 4:
+                                                                    file = open("Times/times.csv")
+                                                                    time4 = file.read()
+                                                                    file.flush()
+                                                                    modtime4, modtime4x = time4.split(":")
+                                                                    modtime4 = float(modtime4) * 60
+                                                                    fulltime4 = float(modtime4) + float(modtime4x)
+                                                                    print(fulltime4)
+                                                                elif solves == 5:
+                                                                    file = open("Times/times.csv")
+                                                                    time5 = file.read()
+                                                                    file.flush()
+                                                                    modtime5, modtime5x = time5.split(":")
+                                                                    modtime5 = float(modtime5) * 60
+                                                                    fulltime5 = float(modtime5) + float(modtime5x)
+                                                                    print(fulltime5)
+                                                                waiting = 0
+                                                                solves = solves + 1
+                                                                timeinput = False
+                                                            elif keys[row][col] == "C":
+                                                                sleep(0.5)
+                                                            elif buttonr.value() == 0:
+                                                                timeinput = False
+                                                                waiting = 0
+                                                                ao5mode = False
+                                                                sessionmode = 0
+                                ao5 = (float(fulltime1) + float(fulltime2) + float(fulltime3) + float(fulltime4) + float(fulltime5)) / 5
+                                lcd.putstr("Average: ")
+                                lcd.putstr(str(ao5))
+                                file = open("/Times/ao5/ao5pb2x2.csv")
+                                pb = file.read()
+                                newpb = pb
+                                if float(newpb) > float(ao5):
+                                    file.flush()
+                                    os.remove("/Times/ao5/ao5pb2x2.csv")
+                                    file = open("/Times/ao5/ao5pb2x2.csv", "w")
+                                    file.write(str(ao5))
+                                    file.flush()
+                                done = True
+                                while done == True:
+                                    if buttonr.value() == 0:
+                                        lcd.clear()
+                                        lcd.putstr("Cube System")
+                                        ao5mode = False
+                                        timeinput = False
+                                        waiting = 0
+                                        sessionmode = 0
+                                        cubeselected = False
+                                        done = False
+                                                #if the enter keypad button is pressed, set waiting to zero, and the loop will reset.
+                                        
+                    elif buttonb.value() == 0:
+                        lcd.clear()
+                        lcd.putstr("ao12 mode")
+                        ao12mode = True
+                        while ao12mode == True:
+                            if buttong.value() == 0:
+                                for i in range(0, 12):
+                                    waiting = 1
+                                    lcd.clear()
+                                    lcd.putstr("Generating      scramble...")
+                                    utime.sleep(1)
+                                    # begin scramble generator.
+                                    os.remove("/Scrambles/scramble.csv")
+                                    file = open("/Scrambles/scramble.csv", "w")
+                                    for i in range (0, 12):
+                                        option = randint(1, 3)
+                                        randommoveold = randommove
+                                        orandommoveold = orandommove
+                                        drandommoveold = drandommove
+                                        randommove = random.choice(scramblemoves)
+                                        orandommove = random.choice(oscramblemoves)
+                                        drandommove = random.choice(dscramblemoves)
+                                        if option == 1:
+                                            while randommove == "R" or drandommove == "RT" and orandommoveold == "R'":
+                                                randommove = random.choice(scramblemoves)
+                                            while randommove == "U" or drandommove == "UT" and orandommoveold == "U'":
+                                                randommove = random.choice(scramblemoves)
+                                            while randommove == "L" or drandommove == "LT" and orandommoveold == "L'":
+                                                randommove = random.choice(scramblemoves)
+                                            while randommove == "B" or drandommove == "BT" and orandommoveold == "B'":
+                                                randommove = random.choice(scramblemoves)
+                                            while randommove == "D" or drandommove == "DT" and orandommoveold == "D'":
+                                                randommove = random.choice(scramblemoves)
+                                            while randommove == "F" or drandommove == "FT" and orandommoveold == "F'":
+                                                randommove = random.choice(scramblemoves)
+                                            while randommove == randommoveold:
+                                                randommove = random.choice(scramblemoves)
+                                            file.write(randommove)
+                                        elif option == 2:
+                                            while orandommove == "R'" and randommoveold == "R" or drandommoveold == "RT":
+                                                orandommove = random.choice(oscramblemoves)
+                                            while orandommove == "U'" and randommoveold == "U" or drandommoveold == "UT":
+                                                orandommove = random.choice(oscramblemoves)
+                                            while orandommove == "L'" and randommoveold == "L" or drandommoveold == "LT":
+                                                orandommove = random.choice(oscramblemoves)
+                                            while orandommove == "B'" and randommoveold == "B" or drandommoveold == "BT":
+                                                orandommove = random.choice(oscramblemoves)
+                                            while orandommove == "D'" and randommoveold == "D" or drandommoveold == "DT":
+                                                orandommove = random.choice(oscramblemoves)
+                                            while orandommove == "F'" and randommoveold == "F" or drandommoveold == "FT":
+                                                orandommove = random.choice(oscramblemoves)
+                                            while orandommove == orandommoveold:
+                                                orandommove = random.choice(oscramblemoves)
+                                            file.write(orandommove)
+                                        elif option == 3:
+                                            file.write(drandommove)
+                                            
+                                    file.close()
+                                    lcd.clear()
+                                    file = open("/Scrambles/scramble.csv")
+                                    scramble = file.read()
+                                    lcd.putstr(scramble)
+                                    utime.sleep(1)
+                                    while waiting == 1:
+                                        if buttonr.value() == 0:
+                                            sessionmode = 0
+                                            waiting = 0
+                                            ao5mode = False
+                                        if buttong.value() == 0:
+                                            lcd.clear()
+                                            lcd.putstr("Enter your time:")
+                                            timeinput = True
+                                            file = open("/Times/creating.csv", "w")
+                                            os.remove("/Times/creating.csv")
+                                            file = open("/Times/creating.csv", "w")
+                                            while timeinput == True:
+                                                for row in range(4):
+                                                    for col in range(4):
+                                                        key = scan(row, col)
+                                                        if key == KEY_DOWN:
+                                                            print("Key Pressed", keys[row][col])
+                                                            last_key_press = keys[row][col]
+                                                            if keys[row][col] == "1":
+                                                                file.write("1")
+                                                                lcd.putstr("1")
+                                                                sleep(0.5)
+                                                            elif keys[row][col] == "2":
+                                                                file.write("2")
+                                                                lcd.putstr("2")
+                                                                sleep(0.5)
+                                                            elif keys[row][col] == "3":
+                                                                file.write("3")
+                                                                lcd.putstr("3")
+                                                                sleep(0.5)
+                                                            elif keys[row][col] == "4":
+                                                                file.write("4")
+                                                                lcd.putstr("4")
+                                                                sleep(0.5)
+                                                            elif keys[row][col] == "5":
+                                                                file.write("5")
+                                                                lcd.putstr("5")
+                                                                sleep(0.5)
+                                                            elif keys[row][col] == "6":
+                                                                file.write("6")
+                                                                lcd.putstr("6")
+                                                                sleep(0.5)
+                                                            elif keys[row][col] == "7":
+                                                                file.write("7")
+                                                                lcd.putstr("7")
+                                                                sleep(0.5)
+                                                            elif keys[row][col] == "8":
+                                                                file.write("8")
+                                                                lcd.putstr("8")
+                                                                sleep(0.5)
+                                                            elif keys[row][col] == "9":
+                                                                file.write("9")
+                                                                lcd.putstr("9")
+                                                                sleep(0.5)
+                                                            elif keys[row][col] == "0":
+                                                                file.write("0")
+                                                                lcd.putstr("0")
+                                                                sleep(0.5)
+                                                            elif keys[row][col] == "#":
+                                                                file.write(":")
+                                                                lcd.putstr(":")
+                                                                sleep(0.5)
+                                                            elif keys[row][col] == "B":
+                                                                file.write(".")
+                                                                lcd.putstr(".")
+                                                                sleep(0.5)
+                                                            elif keys[row][col] == "D":
+                                                                file.write("0:")
+                                                                lcd.putstr("0:")
+                                                                sleep(0.5)
+                                                            elif keys[row][col] == "A":
+                                                                lcd.clear()
+                                                                os.remove("/Times/creating.csv")
+                                                                file = open("/Times/creating.csv", "w")
+                                                                lcd.putstr("Enter Your Time: ")
+                                                                sleep(0.5)
+                                                            elif keys[row][col] == "*":
+                                                                print("yes")
+                                                                file.flush()
+                                                                file = open("/Times/creating.csv", "r")
+                                                                solvetime = file.read()
+                                                                print(solvetime)
+                                                                lcd.clear()
+                                                                sleep(0.2)
+                                                                file.flush()
+                                                                os.remove("/Times/times.csv")
+                                                                file = open("/Times/times.csv", "w")
+                                                                file.write(str(solvetime))
+                                                                file.flush()
+                                                                sleep(0.5)
+                                                                print("done")
+                                                                file = open("/Times/personalbest2x2.csv", "r")
+                                                                pb = file.read()
+                                                                convertedpb = pb.replace(":", "")
+                                                                convertedsolvetime = solvetime.replace(":", "")
+                                                                if float(convertedpb) > float(convertedsolvetime):
+                                                                    file.flush()
+                                                                    os.remove("/Times/personalbest2x2.csv")
+                                                                    file = open("/Times/personalbest2x2.csv", "w")
+                                                                    file.write(solvetime)
+                                                                    file.flush()
+                                                                    os.remove("/Scrambles/personalbests/2x2.csv")
+                                                                    file = open("/Scrambles/personalbests/2x2.csv", "w")
+                                                                    file.write(scramble)
+                                                                    file.flush()
+                                                                if solves == 1:
+                                                                    file = open("Times/times.csv")
+                                                                    time1 = file.read()
+                                                                    file.flush()
+                                                                    modtime1, modtime1x = time1.split(":")
+                                                                    modtime1 = float(modtime1) * 60
+                                                                    fulltime1 = float(modtime1) + float(modtime1x)
+                                                                    print(fulltime1)
+                                                                elif solves == 2:
+                                                                    file = open("Times/times.csv")
+                                                                    time2 = file.read()
+                                                                    file.flush()
+                                                                    modtime2, modtime2x = time2.split(":")
+                                                                    modtime2 = float(modtime2) * 60
+                                                                    fulltime2 = float(modtime2) + float(modtime2x)
+                                                                    print(fulltime2)
+                                                                elif solves == 3:
+                                                                    file = open("Times/times.csv")
+                                                                    time3 = file.read()
+                                                                    file.flush()
+                                                                    modtime3, modtime3x = time3.split(":")
+                                                                    modtime3 = float(modtime3) * 60
+                                                                    fulltime3 = float(modtime3) + float(modtime3x)
+                                                                    print(fulltime3)
+                                                                elif solves == 4:
+                                                                    file = open("Times/times.csv")
+                                                                    time4 = file.read()
+                                                                    file.flush()
+                                                                    modtime4, modtime4x = time4.split(":")
+                                                                    modtime4 = float(modtime4) * 60
+                                                                    fulltime4 = float(modtime4) + float(modtime4x)
+                                                                    print(fulltime4)
+                                                                elif solves == 5:
+                                                                    file = open("Times/times.csv")
+                                                                    time5 = file.read()
+                                                                    file.flush()
+                                                                    modtime5, modtime5x = time5.split(":")
+                                                                    modtime5 = float(modtime5) * 60
+                                                                    fulltime5 = float(modtime5) + float(modtime5x)
+                                                                    print(fulltime5)
+                                                                elif solves == 6:
+                                                                    file = open("Times/times.csv")
+                                                                    time6 = file.read()
+                                                                    file.flush()
+                                                                    modtime6, modtime6x = time6.split(":")
+                                                                    modtime6 = float(modtime6) * 60
+                                                                    fulltime6 = float(modtime6) + float(modtime6x)
+                                                                    print(fulltime6)
+                                                                elif solves == 7:
+                                                                    file = open("Times/times.csv")
+                                                                    time7 = file.read()
+                                                                    file.flush()
+                                                                    modtime7, modtime7x = time7.split(":")
+                                                                    modtime7 = float(modtime7) * 60
+                                                                    fulltime7 = float(modtime7) + float(modtime7x)
+                                                                    print(fulltime7)
+                                                                elif solves == 8:
+                                                                    file = open("Times/times.csv")
+                                                                    time8 = file.read()
+                                                                    file.flush()
+                                                                    modtime8, modtime8x = time8.split(":")
+                                                                    modtime8 = float(modtime8) * 60
+                                                                    fulltime8 = float(modtime8) + float(modtime8x)
+                                                                    print(fulltime8)
+                                                                elif solves == 9:
+                                                                    file = open("Times/times.csv")
+                                                                    time9 = file.read()
+                                                                    file.flush()
+                                                                    modtime9, modtime9x = time9.split(":")
+                                                                    modtime9 = float(modtime9) * 60
+                                                                    fulltime9 = float(modtime9) + float(modtime9x)
+                                                                    print(fulltime9)
+                                                                elif solves == 10:
+                                                                    file = open("Times/times.csv")
+                                                                    time10 = file.read()
+                                                                    file.flush()
+                                                                    modtime10, modtime10x = time10.split(":")
+                                                                    modtime10 = float(modtime10) * 60
+                                                                    fulltime10 = float(modtime10) + float(modtime10x)
+                                                                    print(fulltime10)
+                                                                elif solves == 11:
+                                                                    file = open("Times/times.csv")
+                                                                    time11 = file.read()
+                                                                    file.flush()
+                                                                    modtime11, modtime11x = time11.split(":")
+                                                                    modtime11 = float(modtime11) * 60
+                                                                    fulltime11 = float(modtime11) + float(modtime11x)
+                                                                    print(fulltime11)
+                                                                elif solves == 12:
+                                                                    file = open("Times/times.csv")
+                                                                    time12 = file.read()
+                                                                    file.flush()
+                                                                    modtime12, modtime12x = time12.split(":")
+                                                                    modtime12 = float(modtime12) * 60
+                                                                    fulltime12 = float(modtime12) + float(modtime12x)
+                                                                    print(fulltime12)
+                                                                waiting = 0
+                                                                solves = solves + 1
+                                                                timeinput = False
+                                                            elif keys[row][col] == "C":
+                                                                sleep(0.5)
+                                                            elif buttonr.value() == 0:
+                                                                timeinput = False
+                                                                waiting = 0
+                                                                ao5mode = False
+                                                                sessionmode = 0
+                                ao12 = (float(fulltime1) + float(fulltime2) + float(fulltime3) + float(fulltime4) + float(fulltime5) + float(fulltime6) + float(fulltime7) + float(fulltime8) + float(fulltime9) + float(fulltime10) + float(fulltime11) + float(fulltime12)) / 12
+                                lcd.putstr("Average: ")
+                                lcd.putstr(str(ao12))
+                                file = open("/Times/ao12/ao12pb2x2.csv")
+                                pb = file.read()
+                                newpb = pb
+                                if float(newpb) > float(ao12):
+                                    file.flush()
+                                    os.remove("/Times/ao12/ao12pb2x2.csv")
+                                    file = open("/Times/ao12/ao12pb2x2.csv", "w")
+                                    file.write(str(ao12))
+                                    file.flush()
+                                done = True
+                                while done == True:
+                                    if buttonr.value() == 0:
+                                        lcd.clear()
+                                        lcd.putstr("Cube System")
+                                        ao12mode = False
+                                        timeinput = False
+                                        waiting = 0
+                                        sessionmode = 0
+                                        cubeselected = False
+                                        done = False
+                                        
+                                                #if the enter keypad button is pressed, set waiting to zero, and the loop will reset.
+                        
+                        
+                    
+                    
+    if buttonb.value() == 0:
+        lcd.clear()
+        lcd.putstr("3 By 3 Rubik's  Cube")
+        cubeselected = True
+    if buttong.value() == 0:
+        lcd.clear()
+        lcd.putstr("Pyraminx")
+        cubeselected = True
+    if buttonf3.value() == 0:
+        lcd.clear()
+        lcd.putstr("Skewb")
+        cubeselected = True
+    if buttonf1.value() == 0:
+        lcd.clear()
+        lcd.putstr("Mirror Magnetic")
+        cubeselected = True
+    if buttonf4.value() == 0:
+        lcd.clear()
+        lcd.putstr("Power Off")
+        utime.sleep(1)
+        lcd.display_off()
+        sys.exit()
+    
+        
+    
+    
